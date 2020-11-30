@@ -132,7 +132,6 @@ public class ProductServiceImpl implements ProductService {
         User createdBy = userRepository.findByEmail(username);
         Product product = new Product();
         setFields(productRequest, product);
-        product.setCreatedAt(new Date());
         product.setCreatedBy(createdBy);
         product = productRepository.save(product);
         setEntries(productRequest, product, createdBy);
@@ -153,12 +152,11 @@ public class ProductServiceImpl implements ProductService {
         Product product = getProductById(id);
         if (product == null) {
             throw new NoSuchEntityException(messageCodeUtil.getFullErrorMessageByBundleCode(
-                    Constants.MSG_PRODUCT_BY_ID_NOT_FOUND, new Object[]{id}));
+                    Constants.ERROR_MSG_PRODUCT_BY_ID_NOT_FOUND, new Object[]{id}));
         }
         User updatedBy = userRepository.findByEmail(username);
         setFields(productRequest, product);
         setEntries(productRequest, product, updatedBy);
-        product.setUpdatedAt(new Date());
         product.setUpdatedBy(updatedBy);
         return product;
     }
@@ -173,7 +171,7 @@ public class ProductServiceImpl implements ProductService {
     public void deleteProduct(final UUID id) {
         if (!productRepository.existsById(id)) {
             throw new NoSuchEntityException(messageCodeUtil.getFullErrorMessageByBundleCode(
-                    Constants.MSG_PRODUCT_BY_ID_NOT_FOUND, new Object[]{id}));
+                    Constants.ERROR_MSG_PRODUCT_BY_ID_NOT_FOUND, new Object[]{id}));
         }
         productRepository.updateDeletedAt(id, new Date());
     }
@@ -214,13 +212,16 @@ public class ProductServiceImpl implements ProductService {
                     file.setPrivateUrl(fileRequest.getPrivateUrl());
                     file.setPublicUrl(fileRequest.getPublicUrl());
                     file.setSizeInBytes(fileRequest.getSizeInBytes());
-                    file.setCreatedAt(new Date());
                     file.setCreatedBy(modifiedBy);
                 } else {
-                    file = mapFiles.get(fileRequest.getId());
-                    file.setUpdatedAt(new Date());
+                    file = mapFiles.remove(fileRequest.getId());
                     file.setUpdatedBy(modifiedBy);
                 }
+                files.add(file);
+            });
+            mapFiles.forEach((key, value) -> {
+                File file = value;
+                file.setDeletedAt(new Date());
                 files.add(file);
             });
         });

@@ -18,9 +18,6 @@ public class ProductToDtoConverter implements Converter<Product, ProductDto> {
     private CategoryToDtoConverter categoryToDtoConverter;
 
     @Autowired
-    private ProductListToDtoListConverter productListToDtoListConverter;
-
-    @Autowired
     private FileToDtoConverter fileToDtoConverter;
 
     @Override
@@ -39,8 +36,10 @@ public class ProductToDtoConverter implements Converter<Product, ProductDto> {
             final List<CategoryDto> categoryDtos = productDto.getCategoryDtos();
             categories.forEach(category -> categoryDtos.add(categoryToDtoConverter.convert(category)));
         });
-        Optional.ofNullable(source.getProducts()).ifPresent(products ->
-                productDto.setProductDtos(productListToDtoListConverter.convert(products)));
+        Optional.ofNullable(source.getProducts()).ifPresent(products -> {
+            final List<ProductDto> productDtos = productDto.getProductDtos();
+            products.forEach(product -> productDtos.add(convertProductToDto(product)));
+        });
         Optional.ofNullable(source.getFiles()).ifPresent(files -> {
             final List<FileDto> fileDtos = productDto.getFileDtos();
             files.forEach(file -> fileDtos.add(fileToDtoConverter.convert(file)));
@@ -51,6 +50,27 @@ public class ProductToDtoConverter implements Converter<Product, ProductDto> {
         Optional.ofNullable(source.getCreatedBy()).ifPresent(
                 user -> productDto.setCreatedById(user.getId()));
         Optional.ofNullable(source.getUpdatedBy()).ifPresent(
+                user -> productDto.setUpdatedById(user.getId()));
+        return productDto;
+    }
+
+    private ProductDto convertProductToDto(final Product product) {
+        final ProductDto productDto = new ProductDto();
+        productDto.setId(product.getId());
+        productDto.setTitle(product.getTitle());
+        productDto.setPrice(product.getPrice());
+        productDto.setDiscount(product.getDiscount());
+        productDto.setDescription(product.getDescription());
+        productDto.setRating(product.getRating());
+        Optional.ofNullable(product.getStatus()).ifPresent(
+                status -> productDto.setStatus(status.getStatusValue()));
+        productDto.setImportHash(product.getImportHash());
+        productDto.setCreatedAt(product.getCreatedAt());
+        productDto.setUpdatedAt(product.getUpdatedAt());
+        productDto.setDeletedAt(product.getDeletedAt());
+        Optional.ofNullable(product.getCreatedBy()).ifPresent(
+                user -> productDto.setCreatedById(user.getId()));
+        Optional.ofNullable(product.getUpdatedBy()).ifPresent(
                 user -> productDto.setUpdatedById(user.getId()));
         return productDto;
     }

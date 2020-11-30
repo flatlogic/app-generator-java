@@ -1,12 +1,17 @@
 package com.flatlogic.app.generator.service.impl;
 
-import com.flatlogic.app.generator.entity.User;
+import com.flatlogic.app.generator.exception.UsernameNotFoundException;
 import com.flatlogic.app.generator.repository.UserRepository;
+import com.flatlogic.app.generator.util.Constants;
+import com.flatlogic.app.generator.util.MessageCodeUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
 
 /**
  * UserDetailsService service.
@@ -14,13 +19,17 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class UserDetailsServiceImpl implements UserDetailsService {
 
-    //private ConcurrentMap<String, UserDetails> concurrentMap = new ConcurrentHashMap<>();
-
     /**
      * UserRepository instance.
      */
     @Autowired
     private UserRepository userRepository;
+
+    /**
+     * MessageCodeUtil instance.
+     */
+    @Autowired
+    private MessageCodeUtil messageCodeUtil;
 
     /**
      * Load user by username.
@@ -31,11 +40,13 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     @Override
     @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String username) {
-        User user = userRepository.findByEmail(username);
-        return org.springframework.security.core.userdetails.User.builder()
-                .username(user.getEmail())
-                .password(user.getPassword())
-                .roles(user.getRole().name()).build();
+        return Optional.ofNullable(userRepository.findByEmail(username)).map(user ->
+                User.builder()
+                        .username(user.getEmail())
+                        .password(user.getPassword())
+                        .roles(user.getRole().name()).build())
+                .orElseThrow(() -> new UsernameNotFoundException(messageCodeUtil
+                        .getFullErrorMessageByBundleCode(Constants.ERROR_MSG_AUTH_INVALID_CREDENTIALS)));
     }
 
 }

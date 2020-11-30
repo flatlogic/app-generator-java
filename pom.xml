@@ -16,6 +16,13 @@
 
 	<properties>
 		<java.version>11</java.version>
+		<driverGroupId>org.postgresql</driverGroupId>
+		<driverArtifactId>postgresql</driverArtifactId>
+		<driverVersion>42.2.18</driverVersion>
+		<jdbcDriver>org.postgresql.Driver</jdbcDriver>
+		<jdbcUrl>jdbc:postgresql://localhost:5432/postgres</jdbcUrl>
+		<jdbcUser>postgres</jdbcUser>
+		<jdbcPassword></jdbcPassword>
 	</properties>
 
 	<dependencies>
@@ -44,8 +51,9 @@
 			<artifactId>hibernate-core</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.postgresql</groupId>
-			<artifactId>postgresql</artifactId>
+			<groupId>${driverGroupId}</groupId>
+			<artifactId>${driverArtifactId}</artifactId>
+			<version>${driverVersion}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.projectlombok</groupId>
@@ -62,12 +70,93 @@
 			<artifactId>springdoc-openapi-ui</artifactId>
 			<version>1.5.0</version>
 		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-test</artifactId>
-			<scope>test</scope>
-		</dependency>
 	</dependencies>
+
+	<profiles>
+		<profile>
+			<id>dev</id>
+			<build>
+				<filters>
+					<filter>src/main/resources/application.properties</filter>
+				</filters>
+				<plugins>
+					<plugin>
+						<groupId>io.github.divinespear</groupId>
+						<artifactId>jpa-schema-maven-plugin</artifactId>
+						<version>0.2.1</version>
+						<configuration>
+							<jdbcDriver>${jdbcDriver}</jdbcDriver>
+							<jdbcUrl>${jdbcUrl}</jdbcUrl>
+							<jdbcUser>${jdbcUser}</jdbcUser>
+							<jdbcPassword>${jdbcPassword}</jdbcPassword>
+							<vendor>hibernate</vendor>
+							<packageToScan>com.flatlogic.app.generator.entity</packageToScan>
+							<scriptAction>create</scriptAction>
+							<format>true</format>
+							<!-- none, create, drop, drop-and-create, create-or-extend-tables -->
+							<databaseAction>drop-and-create</databaseAction>
+						</configuration>
+						<dependencies>
+							<dependency>
+								<groupId>org.hibernate.javax.persistence</groupId>
+								<artifactId>hibernate-jpa-2.1-api</artifactId>
+								<version>1.0.2.Final</version>
+							</dependency>
+							<dependency>
+								<groupId>org.hibernate</groupId>
+								<artifactId>hibernate-entitymanager</artifactId>
+								<version>5.4.23.Final</version>
+							</dependency>
+						</dependencies>
+						<executions>
+							<execution>
+								<goals>
+									<goal>generate</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<groupId>org.codehaus.mojo</groupId>
+						<artifactId>sql-maven-plugin</artifactId>
+						<version>1.5</version>
+						<configuration>
+							<driver>${jdbcDriver}</driver>
+							<url>${jdbcUrl}</url>
+							<username>${jdbcUser}</username>
+							<password>${jdbcPassword}</password>
+						</configuration>
+						<dependencies>
+							<dependency>
+								<groupId>${driverGroupId}</groupId>
+								<artifactId>${driverArtifactId}</artifactId>
+								<version>${driverVersion}</version>
+							</dependency>
+						</dependencies>
+						<executions>
+							<execution>
+								<id>default-cli</id>
+								<goals>
+									<goal>execute</goal>
+								</goals>
+								<configuration>
+									<delimiter>/</delimiter>
+									<delimiterType>normal</delimiterType>
+									<autocommit>true</autocommit>
+									<fileset>
+										<basedir>${basedir}/src/main/resources/sql/</basedir>
+										<includes>
+											<include>import_users.sql</include>
+										</includes>
+									</fileset>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 
 	<build>
 		<plugins>

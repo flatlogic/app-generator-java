@@ -3,8 +3,8 @@ package com.flatlogic.app.generator.controller;
 import com.flatlogic.app.generator.controller.request.MultipartRequest;
 import com.flatlogic.app.generator.exception.CreatePathException;
 import com.flatlogic.app.generator.exception.DownloadException;
-import com.flatlogic.app.generator.service.FileStorageService;
-import com.flatlogic.app.generator.util.Constants;
+import com.flatlogic.app.generator.exception.UploadException;
+import com.flatlogic.app.generator.service.FileService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,11 +17,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
-import java.io.IOException;
 
 /**
  * FileController REST controller.
@@ -36,14 +34,10 @@ public class FileController {
     private static final Logger LOGGER = LoggerFactory.getLogger(FileController.class);
 
     /**
-     * String constant.
-     */
-
-    /**
      * FileService instance.
      */
     @Autowired
-    private FileStorageService fileStorageService;
+    private FileService fileService;
 
     /**
      * Download file.
@@ -54,7 +48,7 @@ public class FileController {
     @GetMapping("download")
     public ResponseEntity<Resource> downloadFile(@RequestParam String privateUrl) {
         LOGGER.info("Download file.");
-        return new ResponseEntity<>(fileStorageService.downloadFile(privateUrl), HttpStatus.OK);
+        return new ResponseEntity<>(fileService.downloadFile(privateUrl), HttpStatus.OK);
     }
 
     /**
@@ -63,16 +57,14 @@ public class FileController {
      * @param file   MultipartRequest
      * @param result BindingResult
      * @return Void
-     * @throws IOException IOException
      */
     @PostMapping("upload/products/image")
-    public ResponseEntity<Void> uploadProductsFile(@Valid MultipartRequest file,
-                                                   BindingResult result) throws IOException {
+    public ResponseEntity<Void> uploadProductsFile(@Valid MultipartRequest file, BindingResult result) {
         LOGGER.info("Upload products file.");
         if (result.hasErrors()) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         } else {
-            fileStorageService.uploadProductsFile(file.getFile(), file.getFilename());
+            fileService.uploadProductsFile(file.getFile(), file.getFilename());
             return new ResponseEntity<>(HttpStatus.OK);
         }
     }
@@ -83,16 +75,14 @@ public class FileController {
      * @param file   MultipartRequest
      * @param result BindingResult
      * @return Void
-     * @throws IOException IOException
      */
     @PostMapping("upload/users/avatar")
-    public ResponseEntity<Void> uploadUsersFile(@Valid MultipartRequest file,
-                                                BindingResult result) throws IOException {
+    public ResponseEntity<Void> uploadUsersFile(@Valid MultipartRequest file, BindingResult result) {
         LOGGER.info("Upload users file.");
         if (result.hasErrors()) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         } else {
-            fileStorageService.uploadUsersFile(file.getFile(), file.getFilename());
+            fileService.uploadUsersFile(file.getFile(), file.getFilename());
             return new ResponseEntity<>(HttpStatus.OK);
         }
     }
@@ -101,33 +91,36 @@ public class FileController {
      * CreatePathException handler.
      *
      * @param e CreatePathException
+     * @return Error message
      */
-    @ResponseStatus(code = HttpStatus.CONFLICT, reason = Constants.ERROR_CREATE_PATH)
     @ExceptionHandler(CreatePathException.class)
-    public void handleCreatePathException(CreatePathException e) {
+    public ResponseEntity<String>  handleCreatePathException(CreatePathException e) {
         LOGGER.error("CreatePathException handler.", e);
+        return new ResponseEntity<>(e.getMessage(), HttpStatus.CONFLICT);
+    }
+
+    /**
+     * UploadException handler.
+     *
+     * @param e UploadException
+     * @return Error message
+     */
+    @ExceptionHandler(UploadException.class)
+    public ResponseEntity<String> handleUploadException(UploadException e) {
+        LOGGER.error("UploadException handler.", e);
+        return new ResponseEntity<>(e.getMessage(), HttpStatus.CONFLICT);
     }
 
     /**
      * DownloadException handler.
      *
      * @param e DownloadException
+     * @return Error message
      */
-    @ResponseStatus(code = HttpStatus.CONFLICT, reason = Constants.ERROR_DOWNLOAD_FILE)
     @ExceptionHandler(DownloadException.class)
-    public void handleDownloadException(DownloadException e) {
+    public ResponseEntity<String>  handleDownloadException(DownloadException e) {
         LOGGER.error("DownloadException handler.", e);
-    }
-
-    /**
-     * IOException handler.
-     *
-     * @param e IOException
-     */
-    @ResponseStatus(code = HttpStatus.CONFLICT, reason = Constants.ERROR_UPLOAD_FILE)
-    @ExceptionHandler(IOException.class)
-    public void handleIOException(IOException e) {
-        LOGGER.error("IOException handler.", e);
+        return new ResponseEntity<>(e.getMessage(), HttpStatus.CONFLICT);
     }
 
 }

@@ -106,7 +106,6 @@ public class OrderServiceImpl implements OrderService {
     public Order saveOrder(final OrderRequest orderRequest, final String username) {
         Order order = new Order();
         setFieldsData(orderRequest, order);
-        order.setCreatedAt(new Date());
         order.setCreatedBy(userRepository.findByEmail(username));
         return orderRepository.save(order);
     }
@@ -125,10 +124,9 @@ public class OrderServiceImpl implements OrderService {
         Order order = getOrderById(id);
         if (order == null) {
             throw new NoSuchEntityException(messageCodeUtil.getFullErrorMessageByBundleCode(
-                    Constants.MSG_ORDER_BY_ID_NOT_FOUND, new Object[]{id}));
+                    Constants.ERROR_MSG_ORDER_BY_ID_NOT_FOUND, new Object[]{id}));
         }
         setFieldsData(orderRequest, order);
-        order.setUpdatedAt(new Date());
         order.setUpdatedBy(userRepository.findByEmail(username));
         return order;
     }
@@ -143,7 +141,7 @@ public class OrderServiceImpl implements OrderService {
     public void deleteOrder(final UUID id) {
         if (!orderRepository.existsById(id)) {
             throw new NoSuchEntityException(messageCodeUtil.getFullErrorMessageByBundleCode(
-                    Constants.MSG_ORDER_BY_ID_NOT_FOUND, new Object[]{id}));
+                    Constants.ERROR_MSG_ORDER_BY_ID_NOT_FOUND, new Object[]{id}));
         }
         orderRepository.updateDeletedAt(id, new Date());
     }

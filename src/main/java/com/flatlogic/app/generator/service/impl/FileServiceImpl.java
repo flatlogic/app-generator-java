@@ -2,8 +2,9 @@ package com.flatlogic.app.generator.service.impl;
 
 import com.flatlogic.app.generator.exception.CreatePathException;
 import com.flatlogic.app.generator.exception.DownloadException;
+import com.flatlogic.app.generator.exception.UploadException;
 import com.flatlogic.app.generator.repository.FileRepository;
-import com.flatlogic.app.generator.service.FileStorageService;
+import com.flatlogic.app.generator.service.FileService;
 import com.flatlogic.app.generator.type.BelongsToType;
 import com.flatlogic.app.generator.util.Constants;
 import com.flatlogic.app.generator.util.MessageCodeUtil;
@@ -34,12 +35,12 @@ import java.util.stream.Stream;
  * FileService service.
  */
 @Service
-public class FileStorageServiceImpl implements FileStorageService {
+public class FileServiceImpl implements FileService {
 
     /**
      * Logger constant.
      */
-    private static final Logger LOGGER = LoggerFactory.getLogger(FileStorageServiceImpl.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(FileServiceImpl.class);
 
     /**
      * String constant.
@@ -111,7 +112,7 @@ public class FileStorageServiceImpl implements FileStorageService {
             }
         } catch (IOException e) {
             throw new CreatePathException(messageCodeUtil.getFullErrorMessageByBundleCode(
-                    Constants.MSG_FILE_FOLDER_FOR_UPLOAD));
+                    Constants.ERROR_MSG_FILE_CREATE_FOLDER));
         }
     }
 
@@ -130,12 +131,11 @@ public class FileStorageServiceImpl implements FileStorageService {
                 return resource;
             } else {
                 throw new DownloadException(messageCodeUtil.getFullErrorMessageByBundleCode(
-                        Constants.MSG_FILE_DOWNLOAD_FILE, new Object[]{privateUrl}));
+                        Constants.ERROR_MSG_FILE_DOWNLOAD_FILE, new Object[]{privateUrl}));
             }
         } catch (MalformedURLException e) {
-            LOGGER.error(e.getMessage(), e);
             throw new DownloadException(messageCodeUtil.getFullErrorMessageByBundleCode(
-                    Constants.MSG_FILE_DOWNLOAD_FILE, new Object[]{privateUrl}));
+                    Constants.ERROR_MSG_FILE_DOWNLOAD_FILE, new Object[]{privateUrl}));
         }
 
     }
@@ -145,12 +145,16 @@ public class FileStorageServiceImpl implements FileStorageService {
      *
      * @param file     MultipartFile
      * @param filename File name
-     * @throws IOException IOException
      */
     @Override
-    public void uploadProductsFile(final MultipartFile file, final String filename) throws IOException {
-        FileCopyUtils.copy(file.getBytes(),
-                new File(IMAGE_LOCATION + FOLDER_SEPARATE + filename));
+    public void uploadProductsFile(final MultipartFile file, final String filename) {
+        try {
+            FileCopyUtils.copy(file.getBytes(),
+                    new File(IMAGE_LOCATION + FOLDER_SEPARATE + filename));
+        } catch (IOException e) {
+            throw new UploadException(messageCodeUtil.getFullErrorMessageByBundleCode(
+                    Constants.ERROR_MSG_FILE_UPLOAD_FILE, new Object[]{filename}));
+        }
     }
 
     /**
@@ -158,18 +162,21 @@ public class FileStorageServiceImpl implements FileStorageService {
      *
      * @param file     MultipartFile
      * @param filename File name
-     * @throws IOException IOException
      */
     @Override
-    public void uploadUsersFile(final MultipartFile file, final String filename) throws IOException {
-        FileCopyUtils.copy(file.getBytes(),
-                new File(AVATAR_LOCATION + FOLDER_SEPARATE + filename));
+    public void uploadUsersFile(final MultipartFile file, final String filename) {
+        try {
+            FileCopyUtils.copy(file.getBytes(),
+                    new File(AVATAR_LOCATION + FOLDER_SEPARATE + filename));
+        } catch (IOException e) {
+            throw new UploadException(messageCodeUtil.getFullErrorMessageByBundleCode(
+                    Constants.ERROR_MSG_FILE_UPLOAD_FILE, new Object[]{filename}));
+        }
     }
 
     /**
      * Remove legacy files.
      */
-    @Override
     @Scheduled(cron = "${scheduled.remove.legacy.files}")
     public void removeLegacyFiles() {
         LOGGER.info("Remove legacy files.");

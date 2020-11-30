@@ -116,7 +116,6 @@ public class CategoryServiceImpl implements CategoryService {
         Category category = new Category();
         category.setTitle(categoryRequest.getTitle());
         category.setImportHash(categoryRequest.getImportHash());
-        category.setCreatedAt(new Date());
         category.setCreatedBy(userRepository.findByEmail(username));
         return categoryRepository.save(category);
     }
@@ -135,11 +134,10 @@ public class CategoryServiceImpl implements CategoryService {
         Category category = getCategoryById(id);
         if (category == null) {
             throw new NoSuchEntityException(messageCodeUtil.getFullErrorMessageByBundleCode(
-                    Constants.MSG_CATEGORY_BY_ID_NOT_FOUND, new Object[]{id}));
+                    Constants.ERROR_MSG_CATEGORY_BY_ID_NOT_FOUND, new Object[]{id}));
         }
         category.setTitle(categoryRequest.getTitle());
         category.setImportHash(categoryRequest.getImportHash());
-        category.setUpdatedAt(new Date());
         category.setUpdatedBy(userRepository.findByEmail(username));
         return category;
     }
@@ -154,7 +152,7 @@ public class CategoryServiceImpl implements CategoryService {
     public void deleteCategory(final UUID id) {
         if (!categoryRepository.existsById(id)) {
             throw new NoSuchEntityException(messageCodeUtil.getFullErrorMessageByBundleCode(
-                    Constants.MSG_CATEGORY_BY_ID_NOT_FOUND, new Object[]{id}));
+                    Constants.ERROR_MSG_CATEGORY_BY_ID_NOT_FOUND, new Object[]{id}));
         }
         categoryRepository.updateDeletedAt(id, new Date());
     }

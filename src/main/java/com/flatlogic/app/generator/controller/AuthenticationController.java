@@ -4,10 +4,11 @@ import com.flatlogic.app.generator.controller.request.AuthRequest;
 import com.flatlogic.app.generator.controller.request.UpdatePasswordRequest;
 import com.flatlogic.app.generator.dto.UserDto;
 import com.flatlogic.app.generator.entity.User;
-import com.flatlogic.app.generator.exception.InvalidLoginException;
+import com.flatlogic.app.generator.exception.UsernameNotFoundException;
 import com.flatlogic.app.generator.jwt.JwtUtil;
 import com.flatlogic.app.generator.service.UserService;
 import com.flatlogic.app.generator.util.Constants;
+import com.flatlogic.app.generator.util.MessageCodeUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +16,7 @@ import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -24,8 +26,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+
+import javax.validation.Valid;
 
 /**
  * AuthenticationController REST controller.
@@ -64,6 +67,12 @@ public class AuthenticationController {
     private JwtUtil jwtUtil;
 
     /**
+     * MessageCodeUtil instance.
+     */
+    @Autowired
+    private MessageCodeUtil messageCodeUtil;
+
+    /**
      * Get current user.
      *
      * @param userDetails UserDto
@@ -78,26 +87,17 @@ public class AuthenticationController {
     }
 
     /**
-     * Login method.
+     * Local login method.
      *
      * @param authRequest AuthRequest
      * @return JWT token
      */
     @PostMapping("signin/local")
-    public ResponseEntity<String> login(@RequestBody AuthRequest authRequest) {
+    public ResponseEntity<String> localLogin(@Valid @RequestBody AuthRequest authRequest) {
         LOGGER.info("Login method.");
-        try {
-            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
-                    authRequest.getEmail(), authRequest.getPassword()));
-        } catch (Exception e) {
-            LOGGER.error(e.getMessage(), e);
-            throw new InvalidLoginException(Constants.INVALID_EMAIL_PASSWORD);
-        }
+        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
+                authRequest.getEmail(), authRequest.getPassword()));
         return new ResponseEntity<>(jwtUtil.generateToken(authRequest.getEmail()), HttpStatus.OK);
-    }
-
-    @PutMapping("/password-reset")
-    public void resetPassword() {
     }
 
     /**
@@ -117,14 +117,28 @@ public class AuthenticationController {
     }
 
     /**
-     * InvalidLoginException handler.
+     * BadCredentialsException handler.
      *
-     * @param e InvalidLoginException
+     * @param e BadCredentialsException
+     * @return Error message
      */
-    @ResponseStatus(code = HttpStatus.BAD_REQUEST, reason = Constants.INVALID_EMAIL_PASSWORD)
-    @ExceptionHandler(InvalidLoginException.class)
-    public void handleInvalidLoginException(InvalidLoginException e) {
-        LOGGER.error("InvalidLoginException handler.", e);
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<String> handleInvalidLoginException(BadCredentialsException e) {
+        LOGGER.error("BadCredentialsException handler.", e);
+        return new ResponseEntity<>(messageCodeUtil.getFullErrorMessageByBundleCode(
+                Constants.ERROR_MSG_AUTH_INVALID_CREDENTIALS), HttpStatus.BAD_REQUEST);
+    }
+
+    /**
+     * UsernameNotFoundException handler.
+     *
+     * @param e UsernameNotFoundException
+     * @return Error message
+     */
+    @ExceptionHandler(UsernameNotFoundException.class)
+    public ResponseEntity<String> handleUsernameNotFoundException(UsernameNotFoundException e) {
+        LOGGER.error("UsernameNotFoundException handler.", e);
+        return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
     }
 
 }

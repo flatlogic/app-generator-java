@@ -5,6 +5,7 @@ import com.flatlogic.app.generator.entity.File;
 import com.flatlogic.app.generator.entity.Product;
 import com.flatlogic.app.generator.entity.User;
 import com.flatlogic.app.generator.exception.NoSuchEntityException;
+import com.flatlogic.app.generator.exception.UsernameNotFoundException;
 import com.flatlogic.app.generator.exception.ValidationException;
 import com.flatlogic.app.generator.repository.ProductRepository;
 import com.flatlogic.app.generator.repository.UserRepository;
@@ -116,13 +117,9 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     public User getUserByEmail(final String email) {
-        User user = userRepository.findByEmail(email);
-        if (user == null) {
-            throw new NoSuchEntityException(messageCodeUtil.getFullErrorMessageByBundleCode(
-                    Constants.MSG_USER_BY_EMAIL_NOT_FOUND, new Object[]{email}));
-        } else {
-            return user;
-        }
+        return Optional.ofNullable(userRepository.findByEmail(email)).orElseThrow(() ->
+                new UsernameNotFoundException(messageCodeUtil.getFullErrorMessageByBundleCode(
+                        Constants.ERROR_MSG_USER_BY_EMAIL_NOT_FOUND, new Object[]{email})));
     }
 
     /**
@@ -149,7 +146,6 @@ public class UserServiceImpl implements UserService {
         User createdBy = userRepository.findByEmail(username);
         User user = new User();
         setFields(userRequest, user);
-        user.setCreatedAt(new Date());
         user.setCreatedBy(createdBy);
         userRepository.save(user);
         setEntries(userRequest, user, createdBy);
@@ -170,12 +166,11 @@ public class UserServiceImpl implements UserService {
         User user = getUserById(id);
         if (user == null) {
             throw new NoSuchEntityException(messageCodeUtil.getFullErrorMessageByBundleCode(
-                    Constants.MSG_USER_BY_ID_NOT_FOUND, new Object[]{id}));
+                    Constants.ERROR_MSG_USER_BY_ID_NOT_FOUND, new Object[]{id}));
         }
         User updatedBy = userRepository.findByEmail(username);
         setFields(userRequest, user);
         setEntries(userRequest, user, updatedBy);
-        user.setUpdatedAt(new Date());
         user.setUpdatedBy(updatedBy);
         return user;
     }
@@ -193,14 +188,13 @@ public class UserServiceImpl implements UserService {
         User user = getUserByEmail(username);
         if (Objects.equals(passwordEncoder.encode(currentPassword), user.getPassword())) {
             throw new ValidationException(messageCodeUtil.getFullErrorMessageByBundleCode(
-                    Constants.MSG_AUTH_WRONG_PASSWORD));
+                    Constants.ERROR_MSG_AUTH_WRONG_PASSWORD));
         }
         if (Objects.equals(passwordEncoder.encode(newPassword), user.getPassword())) {
             throw new ValidationException(messageCodeUtil.getFullErrorMessageByBundleCode(
-                    Constants.MSG_AUTH_PASSWORD_UPDATE_SAME_PASSWORD));
+                    Constants.ERROR_MSG_AUTH_PASSWORD_UPDATE_SAME_PASSWORD));
         }
         user.setPassword(passwordEncoder.encode(newPassword));
-        user.setUpdatedAt(new Date());
         user.setUpdatedBy(user);
     }
 
@@ -214,7 +208,7 @@ public class UserServiceImpl implements UserService {
     public void deleteUser(final UUID id) {
         if (!userRepository.existsById(id)) {
             throw new NoSuchEntityException(messageCodeUtil.getFullErrorMessageByBundleCode(
-                    Constants.MSG_USER_BY_ID_NOT_FOUND, new Object[]{id}));
+                    Constants.ERROR_MSG_USER_BY_ID_NOT_FOUND, new Object[]{id}));
         }
         userRepository.updateDeletedAt(id, new Date());
     }
@@ -257,13 +251,16 @@ public class UserServiceImpl implements UserService {
                     file.setPrivateUrl(fileRequest.getPrivateUrl());
                     file.setPublicUrl(fileRequest.getPublicUrl());
                     file.setSizeInBytes(fileRequest.getSizeInBytes());
-                    file.setCreatedAt(new Date());
                     file.setCreatedBy(modifiedBy);
                 } else {
-                    file = mapFiles.get(fileRequest.getId());
-                    file.setUpdatedAt(new Date());
+                    file = mapFiles.remove(fileRequest.getId());
                     file.setUpdatedBy(modifiedBy);
                 }
+                files.add(file);
+            });
+            mapFiles.forEach((key, value) -> {
+                File file = value;
+                file.setDeletedAt(new Date());
                 files.add(file);
             });
         });
