@@ -21,6 +21,14 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
     List<Order> findOrdersByDeletedAtIsNull(Sort sort);
 
     @Modifying(clearAutomatically = true)
+    @Query("update Order o set o.product.id = null where o.product.id = :productId")
+    void setProductIdAtNull(@Param(value = "productId") UUID productId);
+
+    @Modifying(clearAutomatically = true)
+    @Query("update Order o set o.user.id = null where o.user.id = :userId")
+    void setUserIdAtNull(@Param(value = "userId") UUID userId);
+
+    @Modifying(clearAutomatically = true)
     @Query("update Order o set o.deletedAt = :deletedAt where o.id = :id")
     void updateDeletedAt(@Param(value = "id") UUID id, @Param(value = "deletedAt") Date deletedAt);
 

@@ -3,6 +3,7 @@ package com.flatlogic.app.generator.entity;
 import com.flatlogic.app.generator.type.RoleType;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.Where;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -75,10 +76,12 @@ public class User extends DomainObject<UUID> {
             joinColumns = {@JoinColumn(name = "`userId`")},
             inverseJoinColumns = {@JoinColumn(name = "`productId`")}
     )
+    @Where(clause = "`deletedAt` is null")
     private List<Product> products = new ArrayList<>();
 
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "`belongsToId`", foreignKey = @ForeignKey(name = "none"))
+    @Where(clause = "`deletedAt` is null")
     private List<File> files = new ArrayList<>();
 
 }

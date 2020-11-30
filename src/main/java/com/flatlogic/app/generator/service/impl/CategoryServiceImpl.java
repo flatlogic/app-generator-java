@@ -116,7 +116,6 @@ public class CategoryServiceImpl implements CategoryService {
         Category category = new Category();
         category.setTitle(categoryRequest.getTitle());
         category.setImportHash(categoryRequest.getImportHash());
-        category.setCreatedAt(new Date());
         category.setCreatedBy(userRepository.findByEmail(username));
         return categoryRepository.save(category);
     }
@@ -139,7 +138,6 @@ public class CategoryServiceImpl implements CategoryService {
         }
         category.setTitle(categoryRequest.getTitle());
         category.setImportHash(categoryRequest.getImportHash());
-        category.setUpdatedAt(new Date());
         category.setUpdatedBy(userRepository.findByEmail(username));
         return category;
     }

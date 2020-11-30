@@ -106,7 +106,6 @@ public class OrderServiceImpl implements OrderService {
     public Order saveOrder(final OrderRequest orderRequest, final String username) {
         Order order = new Order();
         setFieldsData(orderRequest, order);
-        order.setCreatedAt(new Date());
         order.setCreatedBy(userRepository.findByEmail(username));
         return orderRepository.save(order);
     }
@@ -128,7 +127,6 @@ public class OrderServiceImpl implements OrderService {
                     Constants.MSG_ORDER_BY_ID_NOT_FOUND, new Object[]{id}));
         }
         setFieldsData(orderRequest, order);
-        order.setUpdatedAt(new Date());
         order.setUpdatedBy(userRepository.findByEmail(username));
         return order;
     }

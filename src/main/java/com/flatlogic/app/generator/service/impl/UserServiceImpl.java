@@ -149,7 +149,6 @@ public class UserServiceImpl implements UserService {
         User createdBy = userRepository.findByEmail(username);
         User user = new User();
         setFields(userRequest, user);
-        user.setCreatedAt(new Date());
         user.setCreatedBy(createdBy);
         userRepository.save(user);
         setEntries(userRequest, user, createdBy);
@@ -175,7 +174,6 @@ public class UserServiceImpl implements UserService {
         User updatedBy = userRepository.findByEmail(username);
         setFields(userRequest, user);
         setEntries(userRequest, user, updatedBy);
-        user.setUpdatedAt(new Date());
         user.setUpdatedBy(updatedBy);
         return user;
     }
@@ -200,7 +198,6 @@ public class UserServiceImpl implements UserService {
                     Constants.MSG_AUTH_PASSWORD_UPDATE_SAME_PASSWORD));
         }
         user.setPassword(passwordEncoder.encode(newPassword));
-        user.setUpdatedAt(new Date());
         user.setUpdatedBy(user);
     }
 
@@ -257,13 +254,16 @@ public class UserServiceImpl implements UserService {
                     file.setPrivateUrl(fileRequest.getPrivateUrl());
                     file.setPublicUrl(fileRequest.getPublicUrl());
                     file.setSizeInBytes(fileRequest.getSizeInBytes());
-                    file.setCreatedAt(new Date());
                     file.setCreatedBy(modifiedBy);
                 } else {
-                    file = mapFiles.get(fileRequest.getId());
-                    file.setUpdatedAt(new Date());
+                    file = mapFiles.remove(fileRequest.getId());
                     file.setUpdatedBy(modifiedBy);
                 }
+                files.add(file);
+            });
+            mapFiles.forEach((key, value) -> {
+                File file = value;
+                file.setDeletedAt(new Date());
                 files.add(file);
             });
         });
