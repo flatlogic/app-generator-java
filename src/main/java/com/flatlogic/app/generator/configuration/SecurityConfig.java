@@ -1,6 +1,6 @@
 package com.flatlogic.app.generator.configuration;
 
-import com.flatlogic.app.generator.jwt.JwtFilter;
+import com.flatlogic.app.generator.jwt.JwtAuthenticationFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -41,7 +41,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter implements WebM
     private PasswordEncoder passwordEncoder;
 
     @Autowired
-    private JwtFilter jwtFilter;
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Value("${url.origin}")
     private String urlOrigin;
@@ -59,12 +59,14 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter implements WebM
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        http.cors(withDefaults()).csrf().disable().authorizeRequests()
-                .antMatchers("/auth/**", "/swagger-ui/*", "/file/download").permitAll()
+        http.cors(withDefaults()).sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                .and().csrf().disable().httpBasic().disable().formLogin().disable().authorizeRequests()
+                .antMatchers("/auth/**", "/file/download").permitAll()
+                .antMatchers(HttpMethod.GET, "/v2/api-docs", "/v3/api-docs", "/swagger-resources/**",
+                        "/swagger-ui/**", "/webjars/**", "favicon.ico").permitAll()
                 .anyRequest().authenticated().and().exceptionHandling()
-                .and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                .and().formLogin().disable().logout().permitAll();
-        http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+                .and().logout().permitAll();
+        http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
     }
 
     @Override

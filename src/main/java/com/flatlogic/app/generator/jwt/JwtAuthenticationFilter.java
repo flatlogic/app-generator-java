@@ -1,6 +1,5 @@
 package com.flatlogic.app.generator.jwt;
 
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -17,14 +16,16 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 @Component
-public class JwtFilter extends OncePerRequestFilter {
+public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private static final String AUTHORIZATION = "Authorization";
 
     private static final String BEARER = "Bearer";
 
+    private static final String SPACE = " ";
+
     @Autowired
-    private JwtUtil jwtUtil;
+    private JwtTokenUtil jwtTokenUtil;
 
     @Autowired
     private UserDetailsService userDetailsService;
@@ -36,13 +37,13 @@ public class JwtFilter extends OncePerRequestFilter {
         String authorizationHeader = httpServletRequest.getHeader(AUTHORIZATION);
         String token = null;
         String username = null;
-        if (authorizationHeader != null && authorizationHeader.startsWith(BEARER + StringUtils.SPACE)) {
+        if (authorizationHeader != null && authorizationHeader.startsWith(BEARER + SPACE)) {
             token = authorizationHeader.substring(7);
-            username = jwtUtil.extractUsername(token);
+            username = jwtTokenUtil.extractUsername(token);
         }
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-            if (jwtUtil.validateToken(token, userDetails)) {
+            if (jwtTokenUtil.validateToken(token, userDetails)) {
                 UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken =
                         new UsernamePasswordAuthenticationToken(userDetails, null,
                                 userDetails.getAuthorities());

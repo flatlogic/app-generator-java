@@ -9,15 +9,18 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import java.util.Date;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Function;
 
-@Service
-public class JwtUtil {
+/**
+ * JwtTokenUtil instance.
+ */
+@Component
+public class JwtTokenUtil {
 
     /**
      * Secret constant.
@@ -38,7 +41,7 @@ public class JwtUtil {
     /**
      * Expiration hours variable.
      */
-    @Value("${jwt.token.expiration.hours}")
+    @Value("${jwt.token.expiration.hours:10}")
     private Long hours;
 
     /**

@@ -5,7 +5,7 @@ import com.flatlogic.app.generator.controller.request.UpdatePasswordRequest;
 import com.flatlogic.app.generator.dto.UserDto;
 import com.flatlogic.app.generator.entity.User;
 import com.flatlogic.app.generator.exception.UsernameNotFoundException;
-import com.flatlogic.app.generator.jwt.JwtUtil;
+import com.flatlogic.app.generator.jwt.JwtTokenUtil;
 import com.flatlogic.app.generator.service.UserService;
 import com.flatlogic.app.generator.util.Constants;
 import com.flatlogic.app.generator.util.MessageCodeUtil;
@@ -19,6 +19,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserCache;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -64,7 +65,13 @@ public class AuthenticationController {
      * JwtUtil instance.
      */
     @Autowired
-    private JwtUtil jwtUtil;
+    private JwtTokenUtil jwtTokenUtil;
+
+    /**
+     * UserCache instance.
+     */
+    @Autowired
+    private UserCache userCache;
 
     /**
      * MessageCodeUtil instance.
@@ -95,9 +102,10 @@ public class AuthenticationController {
     @PostMapping("signin/local")
     public ResponseEntity<String> localLogin(@Valid @RequestBody AuthRequest authRequest) {
         LOGGER.info("Login method.");
+        userCache.removeUserFromCache(authRequest.getEmail());
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
                 authRequest.getEmail(), authRequest.getPassword()));
-        return new ResponseEntity<>(jwtUtil.generateToken(authRequest.getEmail()), HttpStatus.OK);
+        return new ResponseEntity<>(jwtTokenUtil.generateToken(authRequest.getEmail()), HttpStatus.OK);
     }
 
     /**
