@@ -28,8 +28,10 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.view.RedirectView;
 
 import javax.validation.Valid;
+import java.util.NoSuchElementException;
 
 /**
  * AuthenticationController REST controller.
@@ -109,6 +111,16 @@ public class AuthenticationController {
     }
 
     /**
+     * Google sign in.
+     *
+     * @return RedirectView
+     */
+    @GetMapping("signin/google")
+    public RedirectView signInGoogle() {
+        return new RedirectView("/api/oauth2/authorization/google");
+    }
+
+    /**
      * Update user password.
      *
      * @param passwordRequest UpdatePasswordRequest
@@ -146,6 +158,18 @@ public class AuthenticationController {
     @ExceptionHandler(UsernameNotFoundException.class)
     public ResponseEntity<String> handleUsernameNotFoundException(UsernameNotFoundException e) {
         LOGGER.error("UsernameNotFoundException handler.", e);
+        return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+
+    /**
+     * NoSuchElementException handler.
+     *
+     * @param e NoSuchElementException
+     * @return Error message
+     */
+    @ExceptionHandler(NoSuchElementException.class)
+    public ResponseEntity<String> handleNoSuchElementException(NoSuchElementException e) {
+        LOGGER.error("NoSuchElementException handler.", e);
         return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
     }
 

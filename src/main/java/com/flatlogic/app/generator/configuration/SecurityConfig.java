@@ -1,7 +1,10 @@
 package com.flatlogic.app.generator.configuration;
 
 import com.flatlogic.app.generator.jwt.JwtAuthenticationFilter;
+import com.flatlogic.app.generator.oauth2.GoogleOAuth2AuthenticationSuccessHandler;
+import com.flatlogic.app.generator.util.Constants;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,6 +20,10 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserService;
+import org.springframework.security.oauth2.client.web.AuthorizationRequestRepository;
+import org.springframework.security.oauth2.client.web.HttpSessionOAuth2AuthorizationRequestRepository;
+import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.firewall.HttpFirewall;
 import org.springframework.security.web.firewall.StrictHttpFirewall;
@@ -41,10 +48,26 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter implements WebM
     private PasswordEncoder passwordEncoder;
 
     @Autowired
+    @Qualifier(Constants.GOOGLE_OIDC_USER_SERVICE)
+    private OidcUserService googleOidcUserService;
+
+    @Autowired
+    private GoogleOAuth2AuthenticationSuccessHandler googleOAuth2AuthenticationSuccessHandler;
+
+    @Autowired
+    private AuthorizationRequestRepository<OAuth2AuthorizationRequest> authorizationRequestRepository;
+
+    @Autowired
     private JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    @Value("${url.origin}")
-    private String urlOrigin;
+    @Autowired
+    private HttpFirewall httpFirewall;
+
+    @Value("${backend.host}")
+    private String backendHost;
+
+    @Value("${frontend.host}")
+    private String frontendHost;
 
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
@@ -65,20 +88,25 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter implements WebM
                 .antMatchers(HttpMethod.GET, "/v2/api-docs", "/v3/api-docs", "/swagger-resources/**",
                         "/swagger-ui/**", "/webjars/**", "favicon.ico").permitAll()
                 .anyRequest().authenticated().and().exceptionHandling()
-                .and().logout().permitAll();
+                .and().logout().permitAll()
+                .and().oauth2Login().redirectionEndpoint().baseUri("/auth/signin/google/callback")
+                .and().userInfoEndpoint().oidcUserService(googleOidcUserService)
+                .and().authorizationEndpoint().baseUri("/oauth2/authorize")
+                .authorizationRequestRepository(authorizationRequestRepository)
+                .and().successHandler(googleOAuth2AuthenticationSuccessHandler);
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
     }
 
     @Override
     public void init(WebSecurity web) throws Exception {
         super.init(web);
-        web.httpFirewall(allowUrlEncodedSlashHttpFirewall());
+        web.httpFirewall(httpFirewall);
     }
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList(urlOrigin.split(",")));
+        configuration.setAllowedOrigins(Arrays.asList(backendHost, frontendHost));
         configuration.setAllowedHeaders(Collections.singletonList(CorsConfiguration.ALL));
         configuration.setAllowedMethods(Arrays.asList(HttpMethod.GET.name(), HttpMethod.POST.name(),
                 HttpMethod.PUT.name(), HttpMethod.DELETE.name()));
@@ -94,7 +122,12 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter implements WebM
     }
 
     @Bean
-    public HttpFirewall allowUrlEncodedSlashHttpFirewall() {
+    public AuthorizationRequestRepository<OAuth2AuthorizationRequest> authorizationRequestRepository() {
+        return new HttpSessionOAuth2AuthorizationRequestRepository();
+    }
+
+    @Bean
+    public HttpFirewall httpFirewall() {
         StrictHttpFirewall firewall = new StrictHttpFirewall();
         firewall.setAllowUrlEncodedSlash(true);
         firewall.setAllowUrlEncodedDoubleSlash(true);

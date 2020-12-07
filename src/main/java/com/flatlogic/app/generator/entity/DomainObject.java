@@ -26,7 +26,7 @@ public abstract class DomainObject<I extends Serializable> implements Serializab
     private I id;
 
     @CreationTimestamp
-    @Column(name = "`createdAt`", updatable = false)
+    @Column(name = "`createdAt`", updatable = false, nullable = false)
     private Date createdAt;
 
     @UpdateTimestamp

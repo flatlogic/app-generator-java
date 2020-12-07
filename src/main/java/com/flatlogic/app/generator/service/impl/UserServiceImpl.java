@@ -218,7 +218,8 @@ public class UserServiceImpl implements UserService {
         user.setLastName(userRequest.getLastName());
         user.setPhoneNumber(userRequest.getPhoneNumber());
         user.setEmail(userRequest.getEmail());
-        Optional.ofNullable(userRequest.getRole()).ifPresent(role -> user.setRole(RoleType.valueOfRole(role)));
+        Optional<String> roleOptional = Optional.ofNullable(userRequest.getRole());
+        user.setRole(roleOptional.isPresent() ? RoleType.valueOfRole(userRequest.getRole()) : RoleType.USER);
         user.setDisabled(userRequest.isDisabled());
         user.setPassword(userRequest.getPassword());
         user.setEmailVerified(userRequest.isEmailVerified());

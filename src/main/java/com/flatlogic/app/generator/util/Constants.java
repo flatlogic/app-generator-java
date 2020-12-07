@@ -2,6 +2,8 @@ package com.flatlogic.app.generator.util;
 
 public final class Constants {
 
+    public static final String GOOGLE_OIDC_USER_SERVICE = "googleOidcUserService";
+
     public static final String CREATED_AT = "createdAt";
     public static final String TITLE = "title";
     public static final String EMAIL = "email";
