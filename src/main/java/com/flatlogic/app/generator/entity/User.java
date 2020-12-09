@@ -52,13 +52,13 @@ public class User extends DomainObject<UUID> {
     @Column(name = "`emailVerified`", nullable = false, columnDefinition = "boolean default false")
     private Boolean emailVerified;
 
-    @Column(name = "`emailVerificationToken`", columnDefinition = "text")
+    @Column(name = "`emailVerificationToken`", unique = true, columnDefinition = "text")
     private String emailVerificationToken;
 
     @Column(name = "`emailVerificationTokenExpiresAt`")
     private Date emailVerificationTokenExpiresAt;
 
-    @Column(name = "`passwordResetToken`", columnDefinition = "text")
+    @Column(name = "`passwordResetToken`", unique = true, columnDefinition = "text")
     private String passwordResetToken;
 
     @Column(name = "`passwordResetTokenExpiresAt`")

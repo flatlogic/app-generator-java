@@ -7,12 +7,9 @@ import javax.validation.constraints.NotBlank;
 
 @Getter
 @Setter
-public class UpdatePasswordRequest {
+public class VerifyEmailRequest {
 
     @NotBlank
-    private String currentPassword;
-
-    @NotBlank
-    private String newPassword;
+    private String token;
 
 }

@@ -16,7 +16,7 @@ public interface FileRepository extends JpaRepository<File, UUID> {
     boolean existsFileByPrivateUrl(String privateUrl);
 
     @Query("select f from File f where f.belongsTo = :belongsTo")
-    List<File> findFilesByBelongsTo(String belongsTo);
+    List<File> findFilesByBelongsTo(@Param(value = "belongsTo") String belongsTo);
 
     @Modifying(clearAutomatically = true)
     @Query("update File f set f.deletedAt = :deletedAt where f.id = :id")

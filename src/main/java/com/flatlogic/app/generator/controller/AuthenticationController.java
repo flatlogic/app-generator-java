@@ -1,9 +1,13 @@
 package com.flatlogic.app.generator.controller;
 
 import com.flatlogic.app.generator.controller.request.AuthRequest;
+import com.flatlogic.app.generator.controller.request.ResetPasswordRequest;
+import com.flatlogic.app.generator.controller.request.SendEmailRequest;
 import com.flatlogic.app.generator.controller.request.UpdatePasswordRequest;
+import com.flatlogic.app.generator.controller.request.VerifyEmailRequest;
 import com.flatlogic.app.generator.dto.UserDto;
 import com.flatlogic.app.generator.entity.User;
+import com.flatlogic.app.generator.exception.SendMailException;
 import com.flatlogic.app.generator.exception.UsernameNotFoundException;
 import com.flatlogic.app.generator.jwt.JwtTokenUtil;
 import com.flatlogic.app.generator.service.UserService;
@@ -87,7 +91,7 @@ public class AuthenticationController {
      * @param userDetails UserDto
      * @return UserDetails
      */
-    @GetMapping("/me")
+    @GetMapping("me")
     public ResponseEntity<UserDto> getCurrentUser(@AuthenticationPrincipal UserDetails userDetails) {
         LOGGER.info("Get current user.");
         User user = userService.getUserByEmail(userDetails.getUsername());
@@ -107,7 +111,7 @@ public class AuthenticationController {
         userCache.removeUserFromCache(authRequest.getEmail());
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
                 authRequest.getEmail(), authRequest.getPassword()));
-        return new ResponseEntity<>(jwtTokenUtil.generateToken(authRequest.getEmail()), HttpStatus.OK);
+        return ResponseEntity.ok(jwtTokenUtil.generateToken(authRequest.getEmail()));
     }
 
     /**
@@ -117,7 +121,34 @@ public class AuthenticationController {
      */
     @GetMapping("signin/google")
     public RedirectView signInGoogle() {
+        LOGGER.info("Google sign in.");
         return new RedirectView("/api/oauth2/authorization/google");
+    }
+
+    /**
+     * Sign up.
+     *
+     * @param authRequest AuthRequest
+     * @return JWT token
+     */
+    @PostMapping("signup")
+    public ResponseEntity<String> signUp(@Valid @RequestBody AuthRequest authRequest) {
+        LOGGER.info("Sign up.");
+        userService.createUserAndSendEmail(authRequest.getEmail(), authRequest.getPassword());
+        return ResponseEntity.ok(jwtTokenUtil.generateToken(authRequest.getEmail()));
+    }
+
+    /**
+     * Verify email.
+     *
+     * @param verifyEmailRequest VerifyEmailRequest
+     * @return Void
+     */
+    @PutMapping("verify-email")
+    public ResponseEntity<Void> verifyEmail(@Valid @RequestBody VerifyEmailRequest verifyEmailRequest) {
+        LOGGER.info("Verify email.");
+        userService.updateEmailVerification(verifyEmailRequest.getToken());
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     /**
@@ -127,13 +158,45 @@ public class AuthenticationController {
      * @param userDetails     UserDetails
      * @return Void
      */
-    @PutMapping("/password-update")
-    public ResponseEntity<Void> updatePassword(@RequestBody UpdatePasswordRequest passwordRequest,
+    @PutMapping("password-update")
+    public ResponseEntity<Void> updatePassword(@Valid @RequestBody UpdatePasswordRequest passwordRequest,
                                                @AuthenticationPrincipal UserDetails userDetails) {
         LOGGER.info("Update user password.");
         userService.updateUserPassword(userDetails.getUsername(), passwordRequest.getCurrentPassword(),
                 passwordRequest.getNewPassword());
         return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    /**
+     * Send email for reset password.
+     *
+     * @param sendEmailRequest SendEmailRequest
+     * @return Void
+     */
+    @PostMapping("send-password-reset-email")
+    public ResponseEntity<Void> sendEmailForResetPassword(@Valid @RequestBody SendEmailRequest sendEmailRequest) {
+        LOGGER.info("Send email for reset password.");
+        User user = userService.getUserByEmail(sendEmailRequest.getEmail());
+        if (user == null) {
+            throw new UsernameNotFoundException(messageCodeUtil.getFullErrorMessageByBundleCode(
+                    Constants.ERROR_MSG_USER_BY_EMAIL_NOT_FOUND, new Object[]{sendEmailRequest.getEmail()}));
+        }
+        userService.updateUserPasswordResetTokenAndSendEmail(sendEmailRequest.getEmail());
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    /**
+     * Reset password.
+     *
+     * @param resetPasswordRequest ResetPasswordRequest
+     * @return UserDto
+     */
+    @PutMapping("password-reset")
+    public ResponseEntity<UserDto> resetPassword(@Valid @RequestBody ResetPasswordRequest resetPasswordRequest) {
+        LOGGER.info("Reset password.");
+        User user = userService.updateUserPasswordByPasswordResetToken(resetPasswordRequest.getToken(),
+                resetPasswordRequest.getPassword());
+        return new ResponseEntity<>(defaultConversionService.convert(user, UserDto.class), HttpStatus.OK);
     }
 
     /**
@@ -171,6 +234,18 @@ public class AuthenticationController {
     public ResponseEntity<String> handleNoSuchElementException(NoSuchElementException e) {
         LOGGER.error("NoSuchElementException handler.", e);
         return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+
+    /**
+     * SendMailException handler.
+     *
+     * @param e SendMailException
+     * @return Error message
+     */
+    @ExceptionHandler(SendMailException.class)
+    public ResponseEntity<String> handleSendMailException(SendMailException e) {
+        LOGGER.error("SendMailException handler.", e);
+        return new ResponseEntity<>(e.getMessage(), HttpStatus.CONFLICT);
     }
 
 }

@@ -1,9 +1,7 @@
 package com.flatlogic.app.generator.controller;
 
 import com.flatlogic.app.generator.controller.request.MultipartRequest;
-import com.flatlogic.app.generator.exception.CreatePathException;
-import com.flatlogic.app.generator.exception.DownloadException;
-import com.flatlogic.app.generator.exception.UploadException;
+import com.flatlogic.app.generator.exception.FileException;
 import com.flatlogic.app.generator.service.FileService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,7 +46,7 @@ public class FileController {
     @GetMapping("download")
     public ResponseEntity<Resource> downloadFile(@RequestParam String privateUrl) {
         LOGGER.info("Download file.");
-        return new ResponseEntity<>(fileService.downloadFile(privateUrl), HttpStatus.OK);
+        return ResponseEntity.ok(fileService.downloadFile(privateUrl));
     }
 
     /**
@@ -88,38 +86,14 @@ public class FileController {
     }
 
     /**
-     * CreatePathException handler.
+     * FileException handler.
      *
-     * @param e CreatePathException
+     * @param e FileException
      * @return Error message
      */
-    @ExceptionHandler(CreatePathException.class)
-    public ResponseEntity<String>  handleCreatePathException(CreatePathException e) {
-        LOGGER.error("CreatePathException handler.", e);
-        return new ResponseEntity<>(e.getMessage(), HttpStatus.CONFLICT);
-    }
-
-    /**
-     * UploadException handler.
-     *
-     * @param e UploadException
-     * @return Error message
-     */
-    @ExceptionHandler(UploadException.class)
-    public ResponseEntity<String> handleUploadException(UploadException e) {
-        LOGGER.error("UploadException handler.", e);
-        return new ResponseEntity<>(e.getMessage(), HttpStatus.CONFLICT);
-    }
-
-    /**
-     * DownloadException handler.
-     *
-     * @param e DownloadException
-     * @return Error message
-     */
-    @ExceptionHandler(DownloadException.class)
-    public ResponseEntity<String>  handleDownloadException(DownloadException e) {
-        LOGGER.error("DownloadException handler.", e);
+    @ExceptionHandler(FileException.class)
+    public ResponseEntity<String> handleFileException(FileException e) {
+        LOGGER.error("FileException handler.", e);
         return new ResponseEntity<>(e.getMessage(), HttpStatus.CONFLICT);
     }
 

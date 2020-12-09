@@ -6,7 +6,6 @@ import org.springframework.cache.concurrent.ConcurrentMapCache;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
-import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -44,19 +43,6 @@ public class ApplicationConfig implements WebMvcConfigurer {
     @Bean
     public UserCache userCache() {
         return new SpringCacheBasedUserCache(new ConcurrentMapCache(UserCache.class.getName()));
-    }
-
-    /**
-     * Create ResourceBundleMessageSource bean.
-     *
-     * @return ResourceBundleMessageSource
-     */
-    @Bean
-    public ResourceBundleMessageSource messageSource() {
-        ResourceBundleMessageSource source = new ResourceBundleMessageSource();
-        source.setBasenames("messages/message");
-        source.setUseCodeAsDefaultMessage(true);
-        return source;
     }
 
     /**

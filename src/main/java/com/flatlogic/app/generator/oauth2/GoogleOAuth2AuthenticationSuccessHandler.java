@@ -21,8 +21,6 @@ import java.util.Map;
 @Component
 public class GoogleOAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
-    private static final String TOKEN = "token";
-
     @Autowired
     private UserRepository userRepository;
 
@@ -43,7 +41,7 @@ public class GoogleOAuth2AuthenticationSuccessHandler extends SimpleUrlAuthentic
         User user = userRepository.findByEmail(email);
         String token = jwtTokenUtil.generateToken(user.getEmail());
         String redirectionUrl = UriComponentsBuilder.fromUriString(frontendHost).pathSegment("#/login")
-                .queryParam(TOKEN, token).build().toUriString();
+                .queryParam(Constants.TOKEN, token).build().toUriString();
         getRedirectStrategy().sendRedirect(request, response, redirectionUrl);
     }
 

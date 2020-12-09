@@ -72,7 +72,7 @@ public class CategoryController {
                 convert(category, CategoryDto.class)).collect(Collectors.toList());
         rowsData.setRows(categoryDtos);
         rowsData.setCount(categoryDtos.size());
-        return new ResponseEntity<>(rowsData, HttpStatus.OK);
+        return ResponseEntity.ok(rowsData);
     }
 
     /**
@@ -89,7 +89,7 @@ public class CategoryController {
         List<Category> categories = categoryService.getCategories(query, limit);
         List<AutocompleteData> wrappers = categories.stream().map(category ->
                 new AutocompleteData(category.getId(), category.getTitle())).collect(Collectors.toList());
-        return new ResponseEntity<>(wrappers, HttpStatus.OK);
+        return ResponseEntity.ok(wrappers);
     }
 
     /**

@@ -7,12 +7,12 @@ import javax.validation.constraints.NotBlank;
 
 @Getter
 @Setter
-public class UpdatePasswordRequest {
+public class ResetPasswordRequest {
 
     @NotBlank
-    private String currentPassword;
+    private String password;
 
     @NotBlank
-    private String newPassword;
+    private String token;
 
 }

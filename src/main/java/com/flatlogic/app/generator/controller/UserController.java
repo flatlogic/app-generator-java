@@ -72,7 +72,7 @@ public class UserController {
                 UserDto.class)).collect(Collectors.toList());
         rowsData.setRows(userDtos);
         rowsData.setCount(userDtos.size());
-        return new ResponseEntity<>(rowsData, HttpStatus.OK);
+        return ResponseEntity.ok(rowsData);
     }
 
     /**
@@ -89,7 +89,7 @@ public class UserController {
         List<User> users = userService.getUsers(query, limit);
         List<AutocompleteData> wrappers = users.stream().map(user ->
                 new AutocompleteData(user.getId(), user.getEmail())).collect(Collectors.toList());
-        return new ResponseEntity<>(wrappers, HttpStatus.OK);
+        return ResponseEntity.ok(wrappers);
     }
 
     /**

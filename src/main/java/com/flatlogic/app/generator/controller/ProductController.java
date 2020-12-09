@@ -72,7 +72,7 @@ public class ProductController {
                 convert(product, ProductDto.class)).collect(Collectors.toList());
         rowsData.setRows(productDtos);
         rowsData.setCount(productDtos.size());
-        return new ResponseEntity<>(rowsData, HttpStatus.OK);
+        return ResponseEntity.ok(rowsData);
     }
 
     /**
@@ -89,7 +89,7 @@ public class ProductController {
         List<Product> products = productService.getProducts(query, limit);
         List<AutocompleteData> wrappers = products.stream().map(product ->
                 new AutocompleteData(product.getId(), product.getTitle())).collect(Collectors.toList());
-        return new ResponseEntity<>(wrappers, HttpStatus.OK);
+        return ResponseEntity.ok(wrappers);
     }
 
     /**

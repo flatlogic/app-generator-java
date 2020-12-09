@@ -121,11 +121,9 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional
     public Order updateOrder(final UUID id, final OrderRequest orderRequest, final String username) {
-        Order order = getOrderById(id);
-        if (order == null) {
-            throw new NoSuchEntityException(messageCodeUtil.getFullErrorMessageByBundleCode(
-                    Constants.ERROR_MSG_ORDER_BY_ID_NOT_FOUND, new Object[]{id}));
-        }
+        Order order = Optional.ofNullable(getOrderById(id)).orElseThrow(() -> new NoSuchEntityException(
+                messageCodeUtil.getFullErrorMessageByBundleCode(Constants.ERROR_MSG_ORDER_BY_ID_NOT_FOUND,
+                        new Object[]{id})));
         setFieldsData(orderRequest, order);
         order.setUpdatedBy(userRepository.findByEmail(username));
         return order;

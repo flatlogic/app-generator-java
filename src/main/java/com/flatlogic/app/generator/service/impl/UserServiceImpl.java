@@ -9,6 +9,7 @@ import com.flatlogic.app.generator.exception.UsernameNotFoundException;
 import com.flatlogic.app.generator.exception.ValidationException;
 import com.flatlogic.app.generator.repository.ProductRepository;
 import com.flatlogic.app.generator.repository.UserRepository;
+import com.flatlogic.app.generator.service.JavaMailService;
 import com.flatlogic.app.generator.service.UserService;
 import com.flatlogic.app.generator.type.BelongsToColumnType;
 import com.flatlogic.app.generator.type.BelongsToType;
@@ -17,9 +18,11 @@ import com.flatlogic.app.generator.type.RoleType;
 import com.flatlogic.app.generator.util.Constants;
 import com.flatlogic.app.generator.util.MessageCodeUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,6 +42,12 @@ import java.util.stream.Collectors;
 @Service
 @Transactional(readOnly = true)
 public class UserServiceImpl implements UserService {
+
+    /**
+     * JavaMailService service.
+     */
+    @Autowired
+    private JavaMailService javaMailService;
 
     /**
      * UserRepository instance.
@@ -63,6 +72,18 @@ public class UserServiceImpl implements UserService {
      */
     @Autowired
     private MessageCodeUtil messageCodeUtil;
+
+    /**
+     * Token expiration variable.
+     */
+    @Value("${email.verification.token.expiration.hours:3}")
+    private Integer periodVerification;
+
+    /**
+     * Token expiration variable.
+     */
+    @Value("${password.reset.token.expiration.hours:3}")
+    private Integer periodReset;
 
     /**
      * Get users.
@@ -134,6 +155,51 @@ public class UserServiceImpl implements UserService {
     }
 
     /**
+     * Create user.
+     *
+     * @param email    User email
+     * @param password User password
+     * @return User
+     */
+    @Override
+    @Transactional
+    public User createUserAndSendEmail(final String email, final String password) {
+        UUID token = UUID.randomUUID();
+        javaMailService.sendEmailForCreateUser(email, token);
+        User user = new User();
+        user.setEmail(email);
+        user.setPassword(passwordEncoder.encode(password));
+        user.setRole(RoleType.USER);
+        user.setEmailVerified(Boolean.FALSE);
+        user.setDisabled(Boolean.FALSE);
+        user.setEmailVerified(Boolean.FALSE);
+        user.setEmailVerificationToken(token.toString());
+        user.setEmailVerificationTokenExpiresAt(new Date());
+        return userRepository.save(user);
+    }
+
+    /**
+     * Update email verification.
+     *
+     * @param token EmailVerification token
+     * @return User
+     */
+    @Override
+    @Transactional
+    public User updateEmailVerification(final String token) {
+        User user = Optional.ofNullable(userRepository.findByEmailVerificationToken(token)).orElseThrow(() ->
+                new ValidationException(messageCodeUtil.getFullErrorMessageByBundleCode(
+                        Constants.ERROR_MSG_USER_EMAIL_VERIFICATION_RESET_OR_EXPIRED)));
+        long different = (new Date().getTime() - user.getEmailVerificationTokenExpiresAt().getTime()) / 1000 / 60 / 60;
+        if (different > periodVerification) {
+            throw new ValidationException(messageCodeUtil.getFullErrorMessageByBundleCode(
+                    Constants.ERROR_MSG_USER_EMAIL_VERIFICATION_RESET_OR_EXPIRED));
+        }
+        userRepository.updateEmailVerificationToken(token);
+        return user;
+    }
+
+    /**
      * Save user.
      *
      * @param userRequest User data
@@ -163,15 +229,48 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public User updateUser(final UUID id, final UserRequest userRequest, final String username) {
-        User user = getUserById(id);
-        if (user == null) {
-            throw new NoSuchEntityException(messageCodeUtil.getFullErrorMessageByBundleCode(
-                    Constants.ERROR_MSG_USER_BY_ID_NOT_FOUND, new Object[]{id}));
-        }
+        User user = Optional.ofNullable(getUserById(id)).orElseThrow(() -> new NoSuchEntityException(messageCodeUtil
+                .getFullErrorMessageByBundleCode(Constants.ERROR_MSG_USER_BY_ID_NOT_FOUND, new Object[]{id})));
         User updatedBy = userRepository.findByEmail(username);
         setFields(userRequest, user);
         setEntries(userRequest, user, updatedBy);
         user.setUpdatedBy(updatedBy);
+        return user;
+    }
+
+    /**
+     * Update password reset token and send email.
+     *
+     * @param email User email
+     */
+    @Override
+    @Transactional
+    public void updateUserPasswordResetTokenAndSendEmail(final String email) {
+        UUID token = UUID.randomUUID();
+        javaMailService.sendEmailForUpdateUserPasswordResetTokenAnd(email, token);
+        userRepository.updatePasswordResetToken(token.toString(), new Date(), email);
+    }
+
+    /**
+     * Update password by passwordResetToken.
+     *
+     * @param token User token
+     * @return User
+     */
+    @Override
+    @Transactional
+    public User updateUserPasswordByPasswordResetToken(final String token, final String password) {
+        User user = Optional.ofNullable(userRepository.findByPasswordResetToken(token)).orElseThrow(() ->
+                new ValidationException(messageCodeUtil.getFullErrorMessageByBundleCode(
+                        Constants.ERROR_MSG_USER_PASSWORD_RESET_OR_EXPIRED)));
+        long different = (new Date().getTime() - user.getPasswordResetTokenExpiresAt().getTime()) / 1000 / 60 / 60;
+        if (different > periodReset) {
+            throw new ValidationException(messageCodeUtil.getFullErrorMessageByBundleCode(
+                    Constants.ERROR_MSG_USER_PASSWORD_RESET_OR_EXPIRED));
+        }
+        user.setPasswordResetToken(null);
+        user.setPasswordResetTokenExpiresAt(null);
+        user.setPassword(passwordEncoder.encode(password));
         return user;
     }
 
@@ -186,11 +285,11 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public void updateUserPassword(final String username, final String currentPassword, final String newPassword) {
         User user = getUserByEmail(username);
-        if (Objects.equals(passwordEncoder.encode(currentPassword), user.getPassword())) {
+        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
             throw new ValidationException(messageCodeUtil.getFullErrorMessageByBundleCode(
                     Constants.ERROR_MSG_AUTH_WRONG_PASSWORD));
         }
-        if (Objects.equals(passwordEncoder.encode(newPassword), user.getPassword())) {
+        if (passwordEncoder.matches(newPassword, user.getPassword())) {
             throw new ValidationException(messageCodeUtil.getFullErrorMessageByBundleCode(
                     Constants.ERROR_MSG_AUTH_PASSWORD_UPDATE_SAME_PASSWORD));
         }
@@ -211,6 +310,22 @@ public class UserServiceImpl implements UserService {
                     Constants.ERROR_MSG_USER_BY_ID_NOT_FOUND, new Object[]{id}));
         }
         userRepository.updateDeletedAt(id, new Date());
+    }
+
+    /**
+     * Reset user email verified.
+     */
+    @Scheduled(cron = "${scheduled.reset.email.verify}")
+    @Transactional
+    public void resetUserEmailVerified() {
+        List<User> users = userRepository.findUsersByEmailVerificationToken();
+        users.forEach(user ->
+                Optional.ofNullable(user.getEmailVerificationTokenExpiresAt()).ifPresent(expiresAt -> {
+                    long different = (new Date().getTime() - expiresAt.getTime()) / 1000 / 60 / 60;
+                    if (different > periodVerification) {
+                        userRepository.deleteUserByEmailVerificationToken(user.getEmailVerificationToken());
+                    }
+                }));
     }
 
     private void setFields(final UserRequest userRequest, final User user) {

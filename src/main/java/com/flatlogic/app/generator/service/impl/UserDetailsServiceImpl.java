@@ -49,7 +49,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     public UserDetails loadUserByUsername(String username) {
         UserDetails userDetails = userCache.getUserFromCache(username);
         if (userDetails == null) {
-            userDetails = Optional.ofNullable(userRepository.findByEmail(username)).map(user ->
+            userDetails = Optional.ofNullable(userRepository.findByEmailAndEmailVerifiedIsTrue(username)).map(user ->
                     User.builder()
                             .username(user.getEmail())
                             .password(user.getPassword())

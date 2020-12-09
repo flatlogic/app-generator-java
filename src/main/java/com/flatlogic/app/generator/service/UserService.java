@@ -16,9 +16,17 @@ public interface UserService {
 
     User getUserById(UUID id);
 
+    User createUserAndSendEmail(String email, String password);
+
+    User updateEmailVerification(String token);
+
     User saveUser(UserRequest userRequest, String username);
 
     User updateUser(UUID id, UserRequest userRequest, String username);
+
+    void updateUserPasswordResetTokenAndSendEmail(String email);
+
+    User updateUserPasswordByPasswordResetToken(String token, String password);
 
     void updateUserPassword(String username, String currentPassword, String newPassword);
 

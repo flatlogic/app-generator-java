@@ -149,11 +149,9 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional
     public Product updateProduct(final UUID id, final ProductRequest productRequest, final String username) {
-        Product product = getProductById(id);
-        if (product == null) {
-            throw new NoSuchEntityException(messageCodeUtil.getFullErrorMessageByBundleCode(
-                    Constants.ERROR_MSG_PRODUCT_BY_ID_NOT_FOUND, new Object[]{id}));
-        }
+        Product product = Optional.ofNullable(getProductById(id)).orElseThrow(() -> new NoSuchEntityException(
+                messageCodeUtil.getFullErrorMessageByBundleCode(Constants.ERROR_MSG_PRODUCT_BY_ID_NOT_FOUND,
+                        new Object[]{id})));
         User updatedBy = userRepository.findByEmail(username);
         setFields(productRequest, product);
         setEntries(productRequest, product, updatedBy);

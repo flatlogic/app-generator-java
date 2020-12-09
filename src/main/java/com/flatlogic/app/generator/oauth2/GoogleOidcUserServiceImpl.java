@@ -66,7 +66,7 @@ public class GoogleOidcUserServiceImpl extends OidcUserService {
             user = new User();
             user.setPassword(passwordEncoder.encode(UUID.randomUUID().toString()));
             user.setRole(RoleType.USER);
-            user.setEmailVerified(Boolean.FALSE);
+            user.setEmailVerified(Boolean.TRUE);
             user.setDisabled(Boolean.FALSE);
         }
         user.setLastName(userInfo.getLastName());

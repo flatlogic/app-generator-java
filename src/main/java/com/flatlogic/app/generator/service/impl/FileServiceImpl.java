@@ -1,8 +1,6 @@
 package com.flatlogic.app.generator.service.impl;
 
-import com.flatlogic.app.generator.exception.CreatePathException;
-import com.flatlogic.app.generator.exception.DownloadException;
-import com.flatlogic.app.generator.exception.UploadException;
+import com.flatlogic.app.generator.exception.FileException;
 import com.flatlogic.app.generator.repository.FileRepository;
 import com.flatlogic.app.generator.service.FileService;
 import com.flatlogic.app.generator.type.BelongsToType;
@@ -111,7 +109,7 @@ public class FileServiceImpl implements FileService {
                 Files.createDirectory(avatar);
             }
         } catch (IOException e) {
-            throw new CreatePathException(messageCodeUtil.getFullErrorMessageByBundleCode(
+            throw new FileException(messageCodeUtil.getFullErrorMessageByBundleCode(
                     Constants.ERROR_MSG_FILE_CREATE_FOLDER));
         }
     }
@@ -130,11 +128,11 @@ public class FileServiceImpl implements FileService {
             if (resource.exists() || resource.isReadable()) {
                 return resource;
             } else {
-                throw new DownloadException(messageCodeUtil.getFullErrorMessageByBundleCode(
+                throw new FileException(messageCodeUtil.getFullErrorMessageByBundleCode(
                         Constants.ERROR_MSG_FILE_DOWNLOAD_FILE, new Object[]{privateUrl}));
             }
         } catch (MalformedURLException e) {
-            throw new DownloadException(messageCodeUtil.getFullErrorMessageByBundleCode(
+            throw new FileException(messageCodeUtil.getFullErrorMessageByBundleCode(
                     Constants.ERROR_MSG_FILE_DOWNLOAD_FILE, new Object[]{privateUrl}));
         }
 
@@ -152,7 +150,7 @@ public class FileServiceImpl implements FileService {
             FileCopyUtils.copy(file.getBytes(),
                     new File(IMAGE_LOCATION + FOLDER_SEPARATE + filename));
         } catch (IOException e) {
-            throw new UploadException(messageCodeUtil.getFullErrorMessageByBundleCode(
+            throw new FileException(messageCodeUtil.getFullErrorMessageByBundleCode(
                     Constants.ERROR_MSG_FILE_UPLOAD_FILE, new Object[]{filename}));
         }
     }
@@ -169,7 +167,7 @@ public class FileServiceImpl implements FileService {
             FileCopyUtils.copy(file.getBytes(),
                     new File(AVATAR_LOCATION + FOLDER_SEPARATE + filename));
         } catch (IOException e) {
-            throw new UploadException(messageCodeUtil.getFullErrorMessageByBundleCode(
+            throw new FileException(messageCodeUtil.getFullErrorMessageByBundleCode(
                     Constants.ERROR_MSG_FILE_UPLOAD_FILE, new Object[]{filename}));
         }
     }

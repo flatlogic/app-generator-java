@@ -1,11 +1,17 @@
 ###requirements:
-+ jdk 11
-+ maven 3.6.3
++ jdk 11 (or higher)
++ maven 3.6.3 (or higher)
 
 How to create database schema and run a local app, run following commands:
 * mvn clean compile -U
 * mvn -Pdev jpa-schema:generate
 * mvn -Pdev sql:execute
+* mvn spring-boot:run
+
+How to create database schema, import data in all tables and run a local app, run following commands:
+* mvn clean compile -U
+* mvn -Pdev jpa-schema:generate
+* mvn -Pdev sql:execute@import-data
 * mvn spring-boot:run
 
 How to (target folder):
@@ -24,8 +30,22 @@ Change db parameters
   spring.datasource.username=postgres
   spring.datasource.password=
 ```
+* open pom.xml
+* change following properties for maven plugin
+```xml
+<jdbcUrl>jdbc:postgresql://localhost:5432/postgres</jdbcUrl>
+<jdbcUser>postgres</jdbcUser>
+<jdbcPassword></jdbcPassword>
+```
 * rebuild and run an app
-  
+
+Hosts (src/main/resources/application.properties)
+```clojure
+    server.port=8080
+    backend.host=http://localhost:${server.port}
+    frontend.host=http://localhost:3000
+```
+
 Change backend server port
 * open file src/main/resources/application.properties
 * change following property
@@ -65,3 +85,14 @@ For changing database driver open pom.xml and change following properties
   spring.datasource.password=
 ```
 * rebuild and run an app
+
+Emails parameters (src/main/resources/application.properties)
+```clojure
+    spring.mail.host=mail.flatlogic.com
+    spring.mail.port=465
+    spring.mail.username=support@flatlogic.com
+    spring.mail.password=Flatlogic1863
+    spring.mail.properties.mail.smtp.auth=true
+    spring.mail.properties.mail.smtp.starttls.enable=true
+    email.from=support@flatlogic.com
+```

@@ -70,7 +70,7 @@ public class OrderController {
                 .convert(order, OrderDto.class)).collect(Collectors.toList());
         rowsData.setRows(orderDtos);
         rowsData.setCount(orderDtos.size());
-        return new ResponseEntity<>(rowsData, HttpStatus.OK);
+        return ResponseEntity.ok(rowsData);
     }
 
     /**

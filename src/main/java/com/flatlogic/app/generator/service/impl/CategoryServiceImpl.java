@@ -20,6 +20,7 @@ import org.springframework.util.ObjectUtils;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -131,11 +132,9 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     @Transactional
     public Category updateCategory(final UUID id, final CategoryRequest categoryRequest, final String username) {
-        Category category = getCategoryById(id);
-        if (category == null) {
-            throw new NoSuchEntityException(messageCodeUtil.getFullErrorMessageByBundleCode(
-                    Constants.ERROR_MSG_CATEGORY_BY_ID_NOT_FOUND, new Object[]{id}));
-        }
+        Category category = Optional.ofNullable(getCategoryById(id)).orElseThrow(() -> new NoSuchEntityException(
+                messageCodeUtil.getFullErrorMessageByBundleCode(Constants.ERROR_MSG_CATEGORY_BY_ID_NOT_FOUND,
+                        new Object[]{id})));
         category.setTitle(categoryRequest.getTitle());
         category.setImportHash(categoryRequest.getImportHash());
         category.setUpdatedBy(userRepository.findByEmail(username));
