@@ -323,7 +323,7 @@ public class UserServiceImpl implements UserService {
                 Optional.ofNullable(user.getEmailVerificationTokenExpiresAt()).ifPresent(expiresAt -> {
                     long different = (new Date().getTime() - expiresAt.getTime()) / 1000 / 60 / 60;
                     if (different > periodVerification) {
-                        userRepository.deleteUserByEmailVerificationToken(user.getEmailVerificationToken());
+                        userRepository.delete(user);
                     }
                 }));
     }

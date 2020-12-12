@@ -55,8 +55,4 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     @Query("update User u set u.deletedAt = :deletedAt where u.id = :id")
     void updateDeletedAt(@Param(value = "id") UUID id, @Param(value = "deletedAt") Date deletedAt);
 
-    @Modifying(clearAutomatically = true)
-    @Query("delete from User u where u.emailVerificationToken = :emailVerificationToken")
-    void deleteUserByEmailVerificationToken(@Param(value = "emailVerificationToken") String emailVerificationToken);
-
 }

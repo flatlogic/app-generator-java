@@ -22,7 +22,7 @@ public abstract class DomainObject<I extends Serializable> implements Serializab
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    @Column(name = "id")
+    @Column(name = "id", updatable = false, nullable = false)
     private I id;
 
     @CreationTimestamp

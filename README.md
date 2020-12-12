@@ -26,9 +26,9 @@ Change db parameters
 * open file src/main/resources/application.properties
 * change following properties
 ```clojure
-  spring.datasource.url=jdbc:postgresql://localhost:5432/postgres
-  spring.datasource.username=postgres
-  spring.datasource.password=
+spring.datasource.url=jdbc:postgresql://localhost:5432/postgres
+spring.datasource.username=postgres
+spring.datasource.password=
 ```
 * open pom.xml
 * change following properties for maven plugin
@@ -41,16 +41,16 @@ Change db parameters
 
 Hosts (src/main/resources/application.properties)
 ```clojure
-    server.port=8080
-    backend.host=http://localhost:${server.port}
-    frontend.host=http://localhost:3000
+server.port=8080
+backend.host=http://localhost:${server.port}
+frontend.host=http://localhost:3000
 ```
 
 Change backend server port
 * open file src/main/resources/application.properties
 * change following property
 ```clojure
-  server.port=8080
+server.port=8080
 ```
 * rebuild and run an app
 
@@ -80,19 +80,19 @@ For changing database driver open pom.xml and change following properties
 ```
 * change db parameters in file src/main/resources/application.properties
 ```clojure
-  spring.datasource.url=jdbc:postgresql://localhost:5432/postgres
-  spring.datasource.username=postgres
-  spring.datasource.password=
+spring.datasource.url=jdbc:postgresql://localhost:5432/postgres
+spring.datasource.username=postgres
+spring.datasource.password=
 ```
 * rebuild and run an app
 
 Emails parameters (src/main/resources/application.properties)
 ```clojure
-    spring.mail.host=mail.flatlogic.com
-    spring.mail.port=465
-    spring.mail.username=support@flatlogic.com
-    spring.mail.password=Flatlogic1863
-    spring.mail.properties.mail.smtp.auth=true
-    spring.mail.properties.mail.smtp.starttls.enable=true
-    email.from=support@flatlogic.com
+spring.mail.host=smtp.gmail.com
+spring.mail.port=587
+spring.mail.username=support@flatlogic.com
+spring.mail.password=
+spring.mail.properties.mail.smtp.starttls.auto=true
+spring.mail.properties.mail.smtp.starttls.enable=true
+email.from=support@flatlogic.com
 ```

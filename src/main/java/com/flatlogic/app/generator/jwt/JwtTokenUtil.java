@@ -68,7 +68,7 @@ public class JwtTokenUtil {
      * Extract claim from token.
      *
      * @param token          Token string
-     * @param claimsResolver Claims tesolver
+     * @param claimsResolver Claims resolver
      * @param <T>            Type class
      * @return Claim
      */
