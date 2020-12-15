@@ -1,7 +1,7 @@
 package com.flatlogic.app.generator.service.impl;
 
-import com.flatlogic.app.generator.entity.User;
-import com.flatlogic.app.generator.repository.UserRepository;
+import com.flatlogic.app.generator.entity.Users;
+import com.flatlogic.app.generator.repository.UsersRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -12,7 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
  * UserDetailsService service.
  */
 @Service
-public class UserDetailsServiceImpl implements UserDetailsService {
+public class UsersDetailsServiceImpl implements UsersDetailsService {
 
     //private ConcurrentMap<String, UserDetails> concurrentMap = new ConcurrentHashMap<>();
 
@@ -20,7 +20,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
      * UserRepository instance.
      */
     @Autowired
-    private UserRepository userRepository;
+    private UsersRepository usersRepository;
 
     /**
      * Load user by username.
@@ -30,8 +30,8 @@ public class UserDetailsServiceImpl implements UserDetailsService {
      */
     @Override
     @Transactional(readOnly = true)
-    public UserDetails loadUserByUsername(String username) {
-        User user = userRepository.findByEmail(username);
+    public UsersDetails loadUsersByUsername(String username) {
+        User user = usersRepository.findByEmail(username);
         return org.springframework.security.core.userdetails.User.builder()
                 .username(user.getEmail())
                 .password(user.getPassword())

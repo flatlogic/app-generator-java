@@ -3,7 +3,7 @@ package com.flatlogic.app.generator.controller;
 import com.flatlogic.app.generator.controller.request.MultipartRequest;
 import com.flatlogic.app.generator.exception.CreatePathException;
 import com.flatlogic.app.generator.exception.DownloadException;
-import com.flatlogic.app.generator.service.FileStorageService;
+import com.flatlogic.app.generator.service.FileService;
 import com.flatlogic.app.generator.util.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,7 +43,7 @@ public class FileController {
      * FileService instance.
      */
     @Autowired
-    private FileStorageService fileStorageService;
+    private FileService fileService;
 
     /**
      * Download file.
@@ -54,7 +54,7 @@ public class FileController {
     @GetMapping("download")
     public ResponseEntity<Resource> downloadFile(@RequestParam String privateUrl) {
         LOGGER.info("Download file.");
-        return new ResponseEntity<>(fileStorageService.downloadFile(privateUrl), HttpStatus.OK);
+        return new ResponseEntity<>(fileService.downloadFile(privateUrl), HttpStatus.OK);
     }
 
     /**
@@ -72,7 +72,7 @@ public class FileController {
         if (result.hasErrors()) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         } else {
-            fileStorageService.uploadProductsFile(file.getFile(), file.getFilename());
+            fileService.uploadProductsFile(file.getFile(), file.getFilename());
             return new ResponseEntity<>(HttpStatus.OK);
         }
     }
@@ -92,7 +92,7 @@ public class FileController {
         if (result.hasErrors()) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         } else {
-            fileStorageService.uploadUsersFile(file.getFile(), file.getFilename());
+            fileService.uploadUsersFile(file.getFile(), file.getFilename());
             return new ResponseEntity<>(HttpStatus.OK);
         }
     }

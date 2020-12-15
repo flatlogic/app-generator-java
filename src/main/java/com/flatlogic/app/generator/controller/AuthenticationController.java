@@ -2,11 +2,11 @@ package com.flatlogic.app.generator.controller;
 
 import com.flatlogic.app.generator.controller.request.AuthRequest;
 import com.flatlogic.app.generator.controller.request.UpdatePasswordRequest;
-import com.flatlogic.app.generator.dto.UserDto;
-import com.flatlogic.app.generator.entity.User;
+import com.flatlogic.app.generator.dto.UsersDto;
+import com.flatlogic.app.generator.entity.Users;
 import com.flatlogic.app.generator.exception.InvalidLoginException;
 import com.flatlogic.app.generator.jwt.JwtUtil;
-import com.flatlogic.app.generator.service.UserService;
+import com.flatlogic.app.generator.service.UsersService;
 import com.flatlogic.app.generator.util.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,7 +49,7 @@ public class AuthenticationController {
      * UserService instance.
      */
     @Autowired
-    private UserService userService;
+    private UsersService usersService;
 
     /**
      * DefaultConversionService instance.
@@ -72,9 +72,9 @@ public class AuthenticationController {
     @GetMapping("/me")
     public ResponseEntity<UserDto> getCurrentUser(@AuthenticationPrincipal UserDetails userDetails) {
         LOGGER.info("Get current user.");
-        User user = userService.getUserByEmail(userDetails.getUsername());
-        UserDto userDto = defaultConversionService.convert(user, UserDto.class);
-        return new ResponseEntity<>(userDto, HttpStatus.OK);
+        Users users = usersService.getUserByEmail(userDetails.getUsername());
+        UsersDto usersDto = defaultConversionService.convert(users, UsersDto.class);
+        return new ResponseEntity<>(usersDto, HttpStatus.OK);
     }
 
     /**
@@ -111,7 +111,7 @@ public class AuthenticationController {
     public ResponseEntity<Void> updatePassword(@RequestBody UpdatePasswordRequest passwordRequest,
                                                @AuthenticationPrincipal UserDetails userDetails) {
         LOGGER.info("Update user password.");
-        userService.updateUserPassword(userDetails.getUsername(), passwordRequest.getCurrentPassword(),
+        usersService.updateUserPassword(userDetails.getUsername(), passwordRequest.getCurrentPassword(),
                 passwordRequest.getNewPassword());
         return new ResponseEntity<>(HttpStatus.OK);
     }

@@ -1,6 +1,6 @@
 package com.flatlogic.app.generator.service.aspect;
 
-import com.flatlogic.app.generator.repository.OrderRepository;
+import com.flatlogic.app.generator.repository.OrdersRepository;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.After;
 import org.aspectj.lang.annotation.Aspect;

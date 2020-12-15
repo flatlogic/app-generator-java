@@ -1,7 +1,7 @@
 package com.flatlogic.app.generator.jwt;
 
-import com.flatlogic.app.generator.entity.User;
-import com.flatlogic.app.generator.repository.UserRepository;
+import com.flatlogic.app.generator.entity.Users;
+import com.flatlogic.app.generator.repository.UsersRepository;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Header;
 import io.jsonwebtoken.Jwts;
@@ -33,7 +33,7 @@ public class JwtUtil {
      * UserRepository component.
      */
     @Autowired
-    private UserRepository userRepository;
+    private UsersRepository usersRepository;
 
     /**
      * Expiration hours variable.
@@ -81,7 +81,7 @@ public class JwtUtil {
      * @return Token string
      */
     public String generateToken(final String username) {
-        User user = userRepository.findByEmail(username);
+        Users user = usersRepository.findByEmail(username);
         long current = System.currentTimeMillis();
         return Jwts.builder().setHeaderParam(Header.TYPE, Header.JWT_TYPE).setSubject(username)
                 .claim(USER, new JwtUser(user.getId(), user.getEmail()))

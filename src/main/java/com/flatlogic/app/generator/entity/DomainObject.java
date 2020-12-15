@@ -38,10 +38,10 @@ public abstract class DomainObject<I extends Serializable> implements Serializab
 
     @OneToOne
     @JoinColumn(name = "`createdById`", updatable = false)
-    private User createdBy;
+    private Users createdBy;
 
     @OneToOne
     @JoinColumn(name = "`updatedById`", insertable = false)
-    private User updatedBy;
+    private Users updatedBy;
 
 }
